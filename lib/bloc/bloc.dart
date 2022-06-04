@@ -22,21 +22,31 @@ abstract class Bloc<Event, State> {
 
   void onError(Object error, StackTrace stackTrace);
 
+  void onEvent(Event event);
+
   void dispatch(Event event) {
     try {
+      onEvent(event);
       _eventSubject.sink.add(event);
     } on Exception catch (error) {
       _handlerError(error);
     }
   }
 
+  Stream<State> transform(
+    Stream<Event> events,
+    Stream<State> Function(Event event) next,
+  ) {
+    return events.asyncExpand(next);
+  }
+
   Stream<State> mapEventToState(Event event);
 
   void _bindStateSubject() {
-    _eventSubject
-        .asyncExpand(
-            (Event event) => mapEventToState(event).handleError(_handlerError))
-        .forEach(
+    transform(
+      _eventSubject,
+      (Event event) => mapEventToState(event).handleError(_handlerError),
+    ).forEach(
       (State nextState) {
         if (currentState == nextState || _stateSubject.isClosed) return;
         _stateSubject.sink.add(nextState);
