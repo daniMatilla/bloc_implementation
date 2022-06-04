@@ -1,3 +1,4 @@
+import 'package:bloc_implementation/bloc/transition.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:meta/meta.dart';
 
@@ -19,6 +20,8 @@ abstract class Bloc<Event, State> {
     _eventSubject.close();
     _stateSubject.close();
   }
+
+  void onTransition(Transition<Event, State> transition);
 
   void onError(Object error, StackTrace stackTrace);
 
@@ -43,12 +46,25 @@ abstract class Bloc<Event, State> {
   Stream<State> mapEventToState(Event event);
 
   void _bindStateSubject() {
+    late Event currentEvent;
+
     transform(
       _eventSubject,
-      (Event event) => mapEventToState(event).handleError(_handlerError),
+      (Event event) {
+        currentEvent = event;
+        return mapEventToState(currentEvent).handleError(_handlerError);
+      },
     ).forEach(
       (State nextState) {
         if (currentState == nextState || _stateSubject.isClosed) return;
+
+        final transition = Transition(
+          currentState: currentState,
+          event: currentEvent,
+          nexttState: nextState,
+        );
+
+        onTransition(transition);
         _stateSubject.sink.add(nextState);
       },
     );
