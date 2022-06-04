@@ -1,7 +1,8 @@
-import 'package:bloc_implementation/bloc/bloc_supervisor.dart';
-import 'package:bloc_implementation/bloc/transition.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:meta/meta.dart';
+
+import 'bloc_supervisor.dart';
+import 'transition.dart';
 
 abstract class Bloc<Event, State> {
   final PublishSubject<Event> _eventSubject = PublishSubject<Event>();
