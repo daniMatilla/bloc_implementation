@@ -1,3 +1,4 @@
+import 'package:bloc_implementation/bloc/bloc_supervisor.dart';
 import 'package:bloc_implementation/bloc/transition.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:meta/meta.dart';
@@ -29,6 +30,7 @@ abstract class Bloc<Event, State> {
 
   void dispatch(Event event) {
     try {
+      BlocSupervisor.delegate.onEvent(this, event!);
       onEvent(event);
       _eventSubject.sink.add(event);
     } on Exception catch (error) {
@@ -64,6 +66,7 @@ abstract class Bloc<Event, State> {
           nexttState: nextState,
         );
 
+        BlocSupervisor.delegate.onTransition(this, transition);
         onTransition(transition);
         _stateSubject.sink.add(nextState);
       },
@@ -71,6 +74,7 @@ abstract class Bloc<Event, State> {
   }
 
   void _handlerError(Object error, [StackTrace stackTrace = StackTrace.empty]) {
+    BlocSupervisor.delegate.onError(this, error, stackTrace);
     onError(error, stackTrace);
   }
 }
